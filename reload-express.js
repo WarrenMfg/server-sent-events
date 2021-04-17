@@ -15,7 +15,7 @@ const serverSentEvents = () => {
       hasServerRestarted = false;
 
       res.write('event: refresh\n');
-      res.write('data: refresh\n');
+      res.write('data: REFRESH\n');
       res.write('id: ' + id + '\n\n');
 
       // do every other time
@@ -26,20 +26,21 @@ const serverSentEvents = () => {
       res.write('id: ' + id + '\n\n');
 
       // heartbeat
-      // clearInterval in case of manual refresh
+      // clearInterval in case of manual client refresh
       clearInterval(intervalId);
       // setInterval to keep connection from timing out
       intervalId = setInterval(() => {
         res.write('event: heartbeat\n');
         res.write('data: HEARTBEAT\n');
         res.write('id: ' + id + '\n\n');
-      }, 60_000);
+      }, 10_000);
     }
 
     // for either first, or any consecutive requests,
     // we must end stream when nodemon restarts;
     // otherwise, ERR_INCOMPLETE_CHUNKED_ENCODING 200 (OK)
-    // NOTE: frontend fires 'error' event due to disconnection
+    // NOTE: frontend fires 'error' event due to disconnection,
+    // which is handled with an event listener
     const gracefulShutdown = () => {
       res.end();
       process.kill(process.pid, 'SIGUSR2');
